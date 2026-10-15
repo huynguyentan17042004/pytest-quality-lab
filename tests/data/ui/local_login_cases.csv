@@ -1,0 +1,3 @@
+case_id,username,password,expected_message,technique,requirement_id
+DEMO-LOCAL-UI-001,local_user,local_password,Welcome,equivalence-partition-positive,REQ-UI-LOGIN-SUCCESS
+DEMO-LOCAL-UI-002,blocked_user,local_password,Invalid credentials,equivalence-partition-negative,REQ-UI-LOGIN-REJECT

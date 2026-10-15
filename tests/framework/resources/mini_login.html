@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Local login fixture</title></head>
+<body>
+  <label>Username <input id="username"></label>
+  <label>Password <input id="password" type="password"></label>
+  <button id="login" onclick="login()">Sign in</button>
+  <p id="message" hidden></p>
+  <script>
+    function login() {
+      setTimeout(() => {
+        const message = document.getElementById('message');
+        message.textContent = document.getElementById('username').value === 'local_user' ? 'Welcome' : 'Invalid credentials';
+        message.hidden = false;
+      }, 100);
+    }
+  </script>
+</body>
+</html>

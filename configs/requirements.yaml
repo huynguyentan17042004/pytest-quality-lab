@@ -1,0 +1,13 @@
+requirements:
+  - id: REQ-API-POST-READ
+    title: Read a post by identifier
+  - id: REQ-API-POST-NOT-FOUND
+    title: Report an unknown post
+  - id: REQ-UI-LOGIN-SUCCESS
+    title: Allow a valid local login
+  - id: REQ-UI-LOGIN-REJECT
+    title: Reject an invalid or locked login
+  - id: REQ-FRAMEWORK-REDACTION
+    title: Redact sensitive values from diagnostics
+  - id: REQ-FRAMEWORK-ENV-ISOLATION
+    title: Restore environment variables after each isolated scope

@@ -1,0 +1,7 @@
+environment = "qa"
+api_base_url = "https://jsonplaceholder.typicode.com"
+ui_base_url = "https://www.saucedemo.com"
+browser = "chrome"
+timeout = 10.0
+headless = true
+retry_count = 0

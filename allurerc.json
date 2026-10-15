@@ -1,0 +1,7 @@
+{
+  "name": "QA Pytest Framework",
+  "output": "./artifacts/allure/report",
+  "historyPath": "./artifacts/allure/history.jsonl",
+  "appendHistory": true,
+  "historyLimit": 30
+}

@@ -1,0 +1,119 @@
+name: Quality checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_external:
+        description: Run the two approved external demos
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  quality-and-local:
+    name: Static checks and deterministic tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project
+        run: python -m pip install -e '.[dev,allure]'
+      - name: Static quality gates
+        run: |
+          ruff format --check .
+          ruff check .
+          mypy src/qa_framework
+      - name: Unit, property, and local API tests
+        run: >-
+          python -m pytest
+          tests/framework/unit
+          tests/framework/property
+          tests/framework/integration/test_api_transport_local.py
+          tests/framework/integration/test_failure_artifacts.py
+          tests/api/test_local_posts_api.py
+          -q --junitxml=artifacts/quality-junit.xml
+          --alluredir=artifacts/allure-results
+      - name: Upload quality artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pytest-quality-lab-results
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+  local-browser:
+    name: Controlled Chrome tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project
+        run: python -m pip install -e '.[dev,allure]'
+      - name: Show browser version
+        run: google-chrome --version
+      - name: Run browser and cross-layer tests
+        run: >-
+          python -m pytest
+          tests/framework/integration/test_webdriver_local.py
+          tests/ui/test_local_login_data_driven.py
+          tests/integration/test_local_health_to_login_flow.py
+          -q --junitxml=artifacts/browser-junit.xml
+          --alluredir=artifacts/allure-results
+      - name: Upload browser artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pytest-quality-lab-browser-results
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+  approved-external-demos:
+    name: Approved external demos
+    if: github.event_name == 'workflow_dispatch' && inputs.run_external
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SAUCE_DEMO_PASSWORD: ${{ secrets.SAUCE_DEMO_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project
+        run: python -m pip install -e '.[dev,allure]'
+      - name: Run exactly two allowlisted external cases
+        run: >-
+          python -m pytest
+          tests/api/test_posts_api.py
+          tests/ui/test_locked_out_login.py
+          --env=qa --run-external -q --maxfail=1
+          --junitxml=artifacts/external-junit.xml
+          --alluredir=artifacts/allure-results
+      - name: Upload external artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pytest-quality-lab-external-results
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

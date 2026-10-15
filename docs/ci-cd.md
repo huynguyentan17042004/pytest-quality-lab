@@ -1,25 +1,34 @@
-# CI/CD
+# Tích hợp và triển khai liên tục
 
-The repository workflow is `.github/workflows/quality.yml`. It runs deterministic
-quality checks and local browser tests on pushes and pull requests. The two approved
-external demos run only through a manual dispatch with `run_external=true` and the
-`SAUCE_DEMO_PASSWORD` repository secret configured.
+Workflow của repository nằm tại `.github/workflows/quality.yml`. Khi push hoặc mở pull
+request, workflow chỉ chạy các kiểm tra ổn định và test trình duyệt cục bộ. Hai demo
+bên ngoài chỉ chạy qua `workflow_dispatch` khi `run_external=true` và repository đã
+cấu hình secret `SAUCE_DEMO_PASSWORD`.
 
-## Pull request and main branch
+## Pull request và nhánh chính
 
-Two zero-public-traffic jobs run independently:
+Hai job không tạo public traffic được chạy độc lập:
 
-1. `quality-and-local`: Ruff, mypy, unit tests, localhost API tests, reporting tests, and local API demos.
-2. `local-browser`: controlled HTML UI tests, data-driven positive/negative login demos, and a localhost API-to-UI flow with headless Chrome.
+1. `quality-and-local`: Ruff, mypy, unit test, localhost API test, reporting test và
+   demo API cục bộ.
+2. `local-browser`: UI test bằng HTML có kiểm soát, các phân vùng đăng nhập
+   positive/negative hướng dữ liệu và luồng localhost từ API sang UI bằng Chrome
+   headless.
 
-Both jobs have a 15-minute wall-clock timeout and publish local artifacts even after a test failure.
+Mỗi job có timeout toàn cục 15 phút và vẫn upload artifact cục bộ nếu test thất bại.
 
-## External demonstrations
+## Demo bên ngoài
 
-`approved-external-demos` exists only for `workflow_dispatch` with `run_external=true`. It runs exactly `DEMO-API-001` and `DEMO-UI-001`, one worker, `--maxfail=1`, and obtains the public SauceDemo password from the `SAUCE_DEMO_PASSWORD` repository secret.
+Job `approved-external-demos` chỉ tồn tại cho `workflow_dispatch` với
+`run_external=true`. Job chạy đúng `DEMO-API-001` và `DEMO-UI-001`, một worker,
+`--maxfail=1`, rồi lấy password SauceDemo từ repository secret
+`SAUCE_DEMO_PASSWORD`.
 
-There is no scheduled external traffic and no automatic rerun.
+Không có lịch gọi dịch vụ bên ngoài và không tự động rerun.
 
 ## Postman
 
-The Postman CLI process contract is mandatory and covered by mocked unit tests. The localhost collection integration test runs automatically when a `postman` executable is available and otherwise reports a visible skip. Installing or authenticating Postman is intentionally outside automatic CI and local setup.
+Contract của tiến trình Postman CLI là bắt buộc và được unit test bằng mock. Integration
+test cho collection localhost tự chạy khi tìm thấy executable `postman`; nếu chưa cài,
+pytest hiển thị một skip rõ ràng. Cài đặt hoặc đăng nhập Postman nằm ngoài thiết lập tự
+động của CI và máy cục bộ.

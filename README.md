@@ -1,57 +1,63 @@
 # Pytest Quality Lab
 
-A production-style QA automation framework built with Python and pytest. It combines
-API testing, Selenium UI automation, example-based and property-based data testing,
-failure diagnostics, and multi-run quality analytics in one portfolio-ready project.
+Framework tự động hóa kiểm thử theo hướng production, được xây dựng bằng Python và
+pytest. Dự án kết hợp kiểm thử API, tự động hóa UI bằng Selenium, kiểm thử hướng dữ
+liệu và property-based, chẩn đoán lỗi, cùng phân tích chất lượng qua nhiều lần chạy
+trong một repository có thể sử dụng ngay.
 
-## Highlights
+## Điểm nổi bật
 
-- Offline-first framework self-tests plus controlled local API and browser demos.
-- Requests API layer with injectable transports, schema validation, and safe logging.
-- Selenium Page Objects with explicit waits and automatic screenshot/page-source capture.
-- Data-driven tests from CSV, JSON, YAML, and XLSX.
-- Hypothesis property-based tests for invariants and edge cases.
-- Isolated environment overrides that restore process state after every test.
-- Redacted logs and Python tracebacks that preserve the original test failure.
-- SQLite run history and a static quality dashboard for pass rate, flaky rate,
-  execution time, requirement coverage, and failure history.
-- JUnit, pytest-html, and Allure-compatible results.
-- GitHub Actions quality, local browser, and opt-in external demo jobs.
+- Bộ self-test offline-first, kèm các demo API và trình duyệt chạy cục bộ có kiểm soát.
+- Lớp API dựa trên Requests, hỗ trợ thay transport, kiểm tra schema và logging an toàn.
+- Selenium Page Object với explicit wait và tự động chụp ảnh/page source khi thất bại.
+- Đọc dữ liệu kiểm thử từ CSV, JSON, YAML và XLSX.
+- Hypothesis property-based testing để kiểm tra invariant và các trường hợp biên.
+- Cô lập biến môi trường và tự động phục hồi trạng thái tiến trình sau mỗi test.
+- Log và traceback được che dữ liệu nhạy cảm mà không làm mất lỗi gốc.
+- Lưu lịch sử nhiều lần chạy vào SQLite; dashboard hiển thị tỷ lệ thành công, flaky,
+  thời gian thực thi, độ bao phủ requirement và lịch sử lỗi.
+- Xuất kết quả theo JUnit XML, pytest-html và định dạng tương thích Allure.
+- GitHub Actions tách riêng kiểm tra chất lượng, trình duyệt cục bộ và demo bên ngoài
+  chỉ chạy khi được chủ động cho phép.
 
-## Architecture
+## Kiến trúc
 
 ```mermaid
 flowchart LR
-    T[pytest tests] --> P[qa_framework plugin]
-    T --> API[Requests API layer]
-    T --> UI[Selenium Page Objects]
-    T --> D[Data providers + Hypothesis]
-    P --> L[Redacted logs and artifacts]
-    P --> DB[(SQLite run history)]
-    DB --> Q[Quality dashboard]
-    P --> R[JUnit / HTML / Allure results]
+    T[pytest tests] --> P[plugin qa_framework]
+    T --> API[Lớp API Requests]
+    T --> UI[Selenium Page Object]
+    T --> D[Data provider + Hypothesis]
+    P --> L[Log và artifact đã che dữ liệu nhạy cảm]
+    P --> DB[(Lịch sử chạy SQLite)]
+    DB --> Q[Dashboard chất lượng]
+    P --> R[Kết quả JUnit / HTML / Allure]
 ```
 
-## Demo screenshots
+Luồng phụ thuộc luôn đi từ test đến lớp hỗ trợ rồi mới vào framework dùng chung.
+Package `qa_framework` không phụ thuộc page object hay API client của ứng dụng cụ thể,
+vì vậy có thể tái sử dụng cho dự án khác.
 
-The SQLite-backed dashboard keeps quality signals from multiple pytest runs in one
-place, including the intentional controlled-failure run:
+## Hình ảnh minh họa
 
-![Quality Analytics Dashboard showing pass rate, flaky rate, execution time, requirement coverage, and run trends](docs/assets/quality-dashboard.png)
+Dashboard dùng SQLite tổng hợp tín hiệu chất lượng từ nhiều lần chạy pytest, bao gồm
+cả lần chạy demo lỗi có kiểm soát:
 
-When a Selenium test fails, the framework captures the browser state without replacing
-the original assertion. This is the local deterministic login fixture used by the demo:
+![Dashboard hiển thị tỷ lệ thành công, flaky, thời gian chạy, độ bao phủ requirement và xu hướng](docs/assets/quality-dashboard.png)
 
-![Controlled Selenium login demo captured automatically on failure](docs/assets/controlled-ui-failure.png)
+Khi Selenium test thất bại, framework lưu trạng thái trình duyệt mà không thay thế
+assertion gốc. Hình dưới là trang đăng nhập cục bộ, ổn định dùng trong demo:
 
-## Requirements
+![Ảnh chụp tự động khi demo đăng nhập Selenium thất bại](docs/assets/controlled-ui-failure.png)
 
-- Python 3.10 or newer.
-- Chrome for local Selenium tests. Firefox is also supported through `--browser`.
-- Postman CLI is optional; its integration test is skipped when the CLI is unavailable.
-- Allure CLI is optional. The Python adapter can generate raw results without it.
+## Yêu cầu
 
-## Installation
+- Python 3.10 trở lên.
+- Chrome để chạy Selenium cục bộ; Firefox cũng được hỗ trợ qua `--browser`.
+- Postman CLI là tùy chọn; integration test tương ứng sẽ được skip nếu chưa cài.
+- Allure CLI là tùy chọn; Python adapter vẫn tạo được raw results khi chưa có CLI.
+
+## Cài đặt nhanh
 
 ```bash
 git clone https://github.com/huynguyentan17042004/pytest-quality-lab.git
@@ -63,33 +69,33 @@ python -m pip install --upgrade pip
 python -m pip install -e '.[dev,allure]'
 ```
 
-Windows PowerShell activation:
+Trên Windows PowerShell, kích hoạt môi trường bằng:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-## Run the tests
+## Chạy kiểm thử
 
-Run the complete local suite:
+Chạy toàn bộ test cục bộ:
 
 ```bash
 python -m pytest -q
 ```
 
-Run deterministic unit tests without browser or Internet access:
+Chỉ chạy unit test ổn định, không cần trình duyệt hay Internet:
 
 ```bash
 python -m pytest tests/framework/unit -q
 ```
 
-Run property-based tests:
+Chạy property-based test:
 
 ```bash
 python -m pytest -m property -v
 ```
 
-Run one data-driven Selenium case in a visible Chrome window:
+Chạy một test case Selenium hướng dữ liệu và hiển thị cửa sổ Chrome:
 
 ```bash
 python -m pytest \
@@ -97,23 +103,23 @@ python -m pytest \
   --browser=chrome --headed -v
 ```
 
-Useful pytest flags:
+### Các flag thường dùng
 
-| Flag | Purpose |
+| Flag | Công dụng |
 | --- | --- |
-| `--env=local` | Select `configs/environments/<name>.toml`. |
-| `--browser=chrome` | Select Chrome or Firefox. |
-| `--headed` | Show the browser instead of running headless. |
-| `--timeout=10` | Override the framework HTTP/UI wait timeout. |
-| `--run-external` | Explicitly allow the approved public demos. |
-| `--analytics-db=PATH` | Store run history in another SQLite file. |
-| `--no-analytics` | Run without writing quality history. |
-| `-x --tb=short` | Stop on the first failure and use a compact traceback. |
-| `--lf` | Re-run tests that failed in the previous pytest invocation. |
+| `--env=local` | Chọn file `configs/environments/<name>.toml`. |
+| `--browser=chrome` | Chọn Chrome hoặc Firefox. |
+| `--headed` | Hiển thị trình duyệt thay vì chạy headless. |
+| `--timeout=10` | Ghi đè timeout cho HTTP và explicit wait của UI. |
+| `--run-external` | Chủ động cho phép các demo công khai đã được duyệt. |
+| `--analytics-db=PATH` | Lưu lịch sử chạy vào một file SQLite khác. |
+| `--no-analytics` | Chạy test nhưng không ghi lịch sử chất lượng. |
+| `-x --tb=short` | Dừng tại lỗi đầu tiên và dùng traceback rút gọn. |
+| `--lf` | Chạy lại các test thất bại ở lần pytest gần nhất. |
 
-## Reports and quality dashboard
+## Báo cáo và dashboard chất lượng
 
-Each normal pytest run updates:
+Mỗi lần chạy pytest thông thường sẽ cập nhật:
 
 ```text
 artifacts/analytics/quality.db
@@ -121,7 +127,7 @@ artifacts/analytics/dashboard.html
 artifacts/runs/<run-id>/
 ```
 
-Generate all standard result formats:
+Tạo đồng thời các định dạng báo cáo chuẩn:
 
 ```bash
 python -m pytest -q \
@@ -131,13 +137,13 @@ python -m pytest -q \
   --alluredir=artifacts/allure-results
 ```
 
-Open the dashboard on macOS:
+Mở dashboard trên macOS:
 
 ```bash
 open artifacts/analytics/dashboard.html
 ```
 
-Regenerate it from the existing SQLite history:
+Tạo lại dashboard từ lịch sử SQLite hiện có:
 
 ```bash
 qa-dashboard \
@@ -146,27 +152,27 @@ qa-dashboard \
   --requirements configs/requirements.yaml
 ```
 
-With Allure 3 installed, generate its report from the raw results:
+Nếu đã cài Allure 3, tạo report từ raw results:
 
 ```bash
 allure generate artifacts/allure-results
 ```
 
-## Controlled failure demonstration
+## Demo lỗi có kiểm soát
 
-The following demo intentionally returns exit code `1`. It verifies traceback logging,
-secret redaction, screenshot capture, page-source capture, and failure-history storage:
+Lệnh sau cố ý kết thúc với exit code `1`. Demo dùng để xác minh logging traceback,
+che secret, chụp screenshot, lưu page source và ghi lịch sử lỗi:
 
 ```bash
 python -m pytest demos/controlled_failure/test_ui_failure.py -v
 ```
 
-Inspect the newest directory under `artifacts/runs/` afterward. Generated artifacts,
-virtual environments, caches, and local secrets are ignored by Git.
+Sau khi chạy, kiểm tra thư mục mới nhất trong `artifacts/runs/`. Artifact sinh ra,
+môi trường ảo, cache và secret cục bộ đều đã được Git bỏ qua.
 
-## External demonstrations
+## Demo dùng dịch vụ bên ngoài
 
-External tests are disabled by default. To run exactly the two allowlisted demos:
+Test bên ngoài mặc định bị tắt. Để chạy đúng hai demo trong allowlist:
 
 ```bash
 export SAUCE_DEMO_PASSWORD='<demo password>'
@@ -176,46 +182,48 @@ python -m pytest \
   --env=qa --run-external --maxfail=1 -q
 ```
 
-Do not place passwords or tokens in command-line arguments or committed configuration.
-Copy `.env.example` to `.env` for local-only values; `.env` is ignored.
+Không truyền password hoặc token qua đối số dòng lệnh và không commit chúng vào cấu
+hình. Sao chép `.env.example` thành `.env` để lưu giá trị chỉ dùng cục bộ; `.env` đã
+được Git bỏ qua.
 
-## Project structure
+## Cấu trúc dự án
 
 ```text
-src/qa_framework/       Reusable framework package
-tests/framework/        Unit, property, and controlled integration self-tests
-tests/support/          Demo application clients, models, and Page Objects
-tests/api/              Local and opt-in external API demos
-tests/ui/               Data-driven local and opt-in external UI demos
-tests/integration/      Cross-layer application workflows
-configs/                Environment and requirement catalogs
-demos/                  Intentional failure demonstrations
-docs/                   Architecture and usage documentation
-postman/                Executable Postman collections
+src/qa_framework/       Package framework có thể tái sử dụng
+tests/framework/        Unit, property và integration self-test có kiểm soát
+tests/support/          Client, model và Page Object phục vụ demo
+tests/api/              Demo API cục bộ và demo bên ngoài dạng opt-in
+tests/ui/               Demo UI hướng dữ liệu cục bộ và bên ngoài dạng opt-in
+tests/integration/      Luồng ứng dụng đi qua nhiều lớp
+configs/                Cấu hình môi trường và danh mục requirement
+demos/                  Demo lỗi có chủ đích
+docs/                   Tài liệu kiến trúc và hướng dẫn sử dụng
+postman/                Postman collection có thể thực thi
 ```
 
-## Verified baseline
+## Baseline đã kiểm chứng
 
-The latest local verification collected 55 tests: 52 passed and 3 were intentionally
-skipped because external access was not enabled and Postman CLI was not installed.
-Ruff, mypy, and dependency consistency checks also passed.
+Lần kiểm tra cục bộ ngày 15/10/2026 thu thập 55 test: 52 test pass và 3 test được chủ
+động skip vì chưa bật truy cập bên ngoài và chưa cài Postman CLI. Ruff và mypy trên
+package `src/` đều pass.
 
-## Documentation
+## Tài liệu chi tiết
 
-- [Architecture](docs/architecture.md)
-- [API testing](docs/api-testing.md)
-- [UI testing](docs/ui-testing.md)
-- [Data-driven testing](docs/data-driven.md)
+- [Kiến trúc](docs/architecture.md)
+- [Kiểm thử API](docs/api-testing.md)
+- [Kiểm thử UI](docs/ui-testing.md)
+- [Kiểm thử hướng dữ liệu](docs/data-driven.md)
 - [Property-based testing](docs/property-based-testing.md)
-- [Quality analytics](docs/quality-analytics.md)
-- [Allure integration](docs/allure.md)
+- [Phân tích chất lượng](docs/quality-analytics.md)
+- [Tích hợp Allure](docs/allure.md)
 - [CI/CD](docs/ci-cd.md)
-- [Contributing](docs/contributing.md)
+- [Đóng góp cho dự án](docs/contributing.md)
+- [Đặc tả thiết kế](DESIGN.md)
 
-## Safety defaults
+## Mặc định an toàn
 
-- Local and deterministic tests run by default.
-- Public endpoints require `--run-external` and are restricted to approved cases.
-- Secrets are redacted from framework-managed logs, tracebacks, subprocess output,
-  and SQLite diagnostics.
-- Supporting artifact failures never replace the original pytest failure.
+- Test cục bộ, ổn định được chạy mặc định.
+- Public endpoint chỉ được gọi khi có `--run-external` và test thuộc allowlist.
+- Secret được che khỏi log, traceback, output subprocess và dữ liệu chẩn đoán SQLite
+  do framework quản lý.
+- Lỗi khi tạo artifact hỗ trợ không bao giờ thay thế lỗi pytest ban đầu.

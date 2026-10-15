@@ -1,4 +1,4 @@
-# QA Pytest Automation Framework — Design Specification (v2)
+# QA Pytest Automation Framework — Đặc tả thiết kế (v2)
 
 > **Trạng thái:** Đã hiện thực và kiểm chứng qua automated quality gates; xem README và `docs/` để chạy lại.
 > **Cập nhật:** 14/10/2026.
@@ -197,7 +197,7 @@ Các nội dung sau chỉ là extension point, chưa hiện thực trong phiên 
 - Slack/email notification.
 - AI-generated test cases.
 
-### Extension đã hiện thực sau MVP
+### Phần mở rộng đã hiện thực sau MVP
 
 - Property-based testing bằng Hypothesis cho invariant của validator, redaction và
   environment isolation.
@@ -219,7 +219,7 @@ Các nội dung sau chỉ là extension point, chưa hiện thực trong phiên 
 - Không cần sửa test hiện có khi thêm provider/backend mới trong những extension point đã khai báo.
 - Tối ưu *feedback-to-cost ratio*: deterministic local check trước, external smoke chỉ khi cần, regression nặng chạy theo lịch.
 
-## 5. Configuration và environment management
+## 5. Quản lý cấu hình và môi trường
 
 ### 5.1 Các nguồn cấu hình
 
@@ -243,7 +243,7 @@ CLI option (non-sensitive)
 - `Settings` là immutable (`frozen=True`) và session scoped trong từng process; mọi client/page nhận qua DI, không rải `os.getenv()`.
 - URL/endpoint demo thay được bằng config, không âm thầm gửi request đến public service.
 
-### 5.3 CLI dự kiến
+### 5.3 Giao diện dòng lệnh dự kiến
 
 ```bash
 python -m pytest tests/framework -q
@@ -260,7 +260,7 @@ python -m pytest tests/api/test_posts_api.py --run-external
 - Log, report, error và external subprocess output cần secret redaction.
 - TLS verification luôn bật mặc định; không tự động upload local artifacts.
 
-## 6. DataLoader và data-driven testing
+## 6. DataLoader và kiểm thử hướng dữ liệu
 
 ### 6.1 Trách nhiệm
 
@@ -273,7 +273,7 @@ RUNTIME PHASE:    typed case -> Settings/secret resolution -> runtime validation
 
 **Quan trọng:** pytest parametrization xảy ra ở **collection time**, còn fixture setup ở runtime. Secret placeholder `${QA_PASSWORD}` không được biến thành raw password bên trong `pytest.param`, test node ID hay collection error repr. Resolve secret ở runtime; missing secret báo lỗi có field/file/row nhưng không lộ giá trị.
 
-### 6.2 Providers và registry
+### 6.2 Trình cung cấp dữ liệu và registry
 
 ```text
 .csv       -> CsvDataProvider
@@ -284,7 +284,7 @@ RUNTIME PHASE:    typed case -> Settings/secret resolution -> runtime validation
 
 `DataProviderFactory.register('.xml', XmlDataProvider)` chỉ là extension example, **không implement XML trong MVP**.
 
-### 6.3 Public API
+### 6.3 API công khai
 
 ```python
 cases = DataLoader.load("tests/data/ui/login_cases.csv", model=LoginCase)
@@ -295,14 +295,14 @@ params = DataLoader.pytest_params(
 
 `pytest_generate_tests` được sử dụng **nếu** cần đọc CLI config tại collection, không cần thêm hook cho mọi parametrized test.
 
-### 6.4 Validation
+### 6.4 Kiểm tra hợp lệ
 
 - File tồn tại, không rỗng; CSV có header; JSON/YAML là danh sách/cấu trúc đúng; Excel có sheet yêu cầu.
 - `case_id` duy nhất; required fields, boolean/int/decimal, marker allowlist đúng schema.
 - Error messages có file/sheet/row/field; placeholder được validate hai bước: cú pháp + khả năng resolve tại runtime.
 - Không thực thi expression, shell, Python/Jinja template từ external test data.
 
-### 6.5 Parametrization ownership
+### 6.5 Trách nhiệm tham số hóa
 
 - Inline `@pytest.mark.parametrize`: ít case/unit/boundary tests.
 - External DataLoader: business matrix và datasets dùng chung.
@@ -310,9 +310,9 @@ params = DataLoader.pytest_params(
 - Runtime data unique qua factories/fixtures và `ResourceTracker` (không tạo bằng DataLoader).
 - Dữ liệu external demo chỉ 1 row/case mỗi lần trong MVP; không khuếch đại Cartesian combinations vô tình.
 
-## 7. API testing — Requests
+## 7. Kiểm thử API — Requests
 
-### 7.1 Stack và layering
+### 7.1 Công nghệ và phân lớp
 
 ```text
 pytest test (tests/api)
@@ -329,7 +329,7 @@ pytest test (tests/api)
 - **Mặc định mỗi test dùng function-scoped session/client**. Không share authenticated session giữa tests; chỉ tối ưu pooling khi chứng minh isolation.
 - Cho phép injectable transport/session để unit-test zero network. Response wrapper (nếu có) không đánh mất raw response, headers hoặc timing.
 
-### 7.2 Retry policy
+### 7.2 Chính sách retry
 
 - Không retry assertion failure hoặc rerun toàn test mặc định.
 - GET/HEAD/OPTIONS: retry giới hạn cho connection failure / 429 / 502 / 503 / 504 khi phù hợp và theo `Retry-After`.
@@ -337,7 +337,7 @@ pytest test (tests/api)
 - POST/PATCH/DELETE không retry mặc định; chỉ ngoại lệ theo service contract (ví dụ idempotency key).
 - Retry số lần cố định nhỏ, theo config, tắt cho demo external để budget có thể dự đoán.
 
-### 7.3 Response validation
+### 7.3 Kiểm tra response
 
 ```text
 status -> content type (nếu có body) -> parse -> schema -> required fields -> business values -> duration
@@ -348,16 +348,16 @@ status -> content type (nếu có body) -> parse -> schema -> required fields ->
 - Transport errors, schema mismatches, business assertion failures được phân loại tách biệt.
 - Framework core có local HTTP stub test cho timeout, header, query, 204, 404, 500, malformed JSON và redaction.
 
-## 8. API testing — Postman Collection
+## 8. Kiểm thử API — Postman Collection
 
-### 8.1 Ranh giới và ownership
+### 8.1 Ranh giới và trách nhiệm
 
 Postman Collection là executable suite (requests, variables, authorization, scripts, run order), **không phải** DataProvider. Runner không parse/translate collection JavaScript. Scenario chỉ có một owner regression chính để tránh duplicate work.
 
 - Postman: shared requests, exploratory, deployment/happy-path smoke và simple chaining.
 - Pytest + Requests: negative/boundary matrix, role permission, large data-driven tests, complex cleanup và cross-layer workflows.
 
-### 8.2 PostmanRunner contract
+### 8.2 Contract của PostmanRunner
 
 Input: collection file/path hoặc ID, environment file, variables, CLI timeout, local output directory.
 Output: `PostmanRunResult(exit_code, stdout_summary, stderr_summary, report_paths, duration, status)`.
@@ -369,7 +369,7 @@ Output: `PostmanRunResult(exit_code, stdout_summary, stderr_summary, report_path
 - Giữ Postman reports ở thư mục riêng, master index liên kết theo `run_id`, **không giả lập** Postman assertions thành pytest tests.
 - Redact subprocess stdout/stderr và report hoặc cấu hình reporter omit headers/bodies trước khi xuất.
 
-### 8.3 Local verification và chi phí
+### 8.3 Kiểm chứng cục bộ và chi phí
 
 - `test_postman_runner_local.py`: mock subprocess command building, exit statuses, timeout, invalid runner path; không spawn external CLI trên mỗi unit run.
 - Một collection local nhỏ được chạy ở opt-in integration stage, tối đa một iteration, chỉ vào local HTTP fixture khi khả thi.
@@ -378,7 +378,7 @@ Output: `PostmanRunResult(exit_code, stdout_summary, stderr_summary, report_path
 
 ## 9. Selenium UI và Page Object Model
 
-### 9.1 Layers và module boundaries
+### 9.1 Các lớp và ranh giới module
 
 ```text
 Test (tests/ui)
@@ -399,7 +399,7 @@ Test (tests/ui)
 
 `open_path`, `visible`, `clickable`, `click`, `type`, `text_of`, `wait_for_url`, `wait_for_text`, `wait_for_invisibility`. Các thao tác ít dùng như window/download/alert ở helper riêng; không phát triển god-object.
 
-### 9.3 Locator policy
+### 9.3 Chính sách locator
 
 ```text
 data-test / data-testid -> stable ID -> stable name -> simple CSS -> XPath khi cần
@@ -407,11 +407,11 @@ data-test / data-testid -> stable ID -> stable name -> simple CSS -> XPath khi c
 
 Không dùng absolute XPath hoặc locator lưu trong CSV/JSON/Excel. Mọi test UI đều đi qua Page Objects.
 
-### 9.4 Local verification
+### 9.4 Kiểm chứng cục bộ
 
 `tests/framework/integration/test_webdriver_local.py` mở `mini_login.html` hoặc local HTTP app đã kiểm soát để chứng minh DriverFactory, explicit waits, Page Object primitives và artifact capture. Không phụ thuộc UI của public demo để kiểm chứng lỗi framework. Browser local integration chỉ chạy khi browser được cài và suite phù hợp được chọn; headless mặc định cho CI.
 
-## 10. Pytest fixtures và isolation
+## 10. Pytest fixture và cơ chế cô lập
 
 | Fixture | Default scope | Trách nhiệm |
 |---|---|---|
@@ -429,7 +429,7 @@ Không dùng absolute XPath hoặc locator lưu trong CSV/JSON/Excel. Mọi test
 - Không đồng thời auto-load plugin qua `pytest11` **và** đăng ký tay trong cùng repo, để tránh duplicate hooks. `pytest11` là lựa chọn sau nếu phát hành thành reusable distribution.
 - Mock/Stub/Test Double ở `tests/framework/unit/`, real local integration ở `tests/framework/integration/`, external SUT demo ở `tests/api`/`tests/ui`.
 
-## 11. Parametrization và markers
+## 11. Tham số hóa và marker
 
 - External DataLoader tạo typed cases + `pytest.param` với stable `case_id`, không đưa secrets vào parameter IDs.
 - Markers được khai báo tập trung trong `pyproject.toml` (hoặc plugin) và bật `--strict-markers`.
@@ -448,7 +448,7 @@ Không dùng absolute XPath hoặc locator lưu trong CSV/JSON/Excel. Mọi test
 
 **Quy tắc:** Test không có marker `external` vẫn không được âm thầm truy cập Internet. `serial` cần chạy trong job riêng hoặc scheduler/lock được kiểm chứng; không mặc định rằng `pytest-xdist` hiểu marker.
 
-## 12. Explicit waits và WebDriverWait
+## 12. Explicit wait và WebDriverWait
 
 - Implicit wait = 0; không dùng `time.sleep()` trong automation test; explicit waits dùng condition thực tế.
 - Visibility cho input, clickable cho button, invisibility cho spinner/overlay, URL cho navigation, text cho dynamic content, staleness rồi find lại sau DOM re-render.
@@ -457,9 +457,9 @@ Không dùng absolute XPath hoặc locator lưu trong CSV/JSON/Excel. Mọi test
 - Không retry click có side-effect (submit payment/order) khi chưa chứng minh action chưa thành công.
 - Test `WebDriverWait` local bao gồm deliberate delayed element và timeout để xác minh hành vi không flaky; tránh fixed waits trong tests.
 
-## 13. Expected, actual và assertion objects
+## 13. Expected, actual và đối tượng assertion
 
-### 13.1 Object types
+### 13.1 Các loại đối tượng
 
 - Case object: toàn bộ record test.
 - Expected object: kết quả mong đợi.
@@ -497,7 +497,7 @@ Page Object không tự quyết định business pass/fail.
 - Domain assertion helper: nested JSON, schema, collection hoặc object phức tạp.
 - Không tạo generic `AssertionManager.assert_equal()` nếu không bổ sung diagnostic value.
 
-### 13.5 Hard và soft assertions
+### 13.5 Hard assertion và soft assertion
 
 Hard assertion dùng cho prerequisite: HTTP status, page load, login, resource ID và schema parse.
 
@@ -510,7 +510,7 @@ Wait chỉ chờ technical state. Assertion đánh giá business expectation. As
 
 **Quyết định v2:** không xây `Expected/Actual` class cho mọi trivial assertion. Chỉ tạo typed models/helpers khi bổ sung khả năng chuẩn hóa, reuse hoặc diagnostics đáng kể. Self-tests xác minh cả assertion pass, failure diff và reset soft collector theo test.
 
-## 14. Test Design Strategy và 2 executable demo cases
+## 14. Chiến lược thiết kế test và hai demo có thể thực thi
 
 ### 14.1 Mục tiêu
 
@@ -587,7 +587,7 @@ def test_locked_out_user_sees_error(login_page, demo_credentials):
 
 **Framework self-tests song hành (local):** `test_webdriver_local.py` với `mini_login.html` xác minh page actions, waits và screenshot handling; đây vẫn là test chính framework, không phải thêm live demo.
 
-### 14.4 Controlled failures và test oracle
+### 14.4 Lỗi có kiểm soát và test oracle
 
 - Chủ động dựng local failure: timeout, invalid settings/data, API 500, missing element, assertion mismatch, setup/teardown failures.
 - Self-test **pass** khi xác nhận framework xử lý/ghi nhận các failure đúng contract; tránh khiến cả pipeline đỏ vì một lỗi được cố tình tạo.
@@ -596,7 +596,7 @@ def test_locked_out_user_sees_error(login_page, demo_credentials):
 
 ## 15. Logging
 
-### 15.1 Output
+### 15.1 Đầu ra
 
 - Human-readable `.log`.
 - Structured `.jsonl`.
@@ -640,9 +640,9 @@ Ghi business actions và page transitions. Không log mọi vòng polling của 
 
 **Bổ sung v2:** context per test dùng `contextvars` hoặc cơ chế tương đương; log của local controlled-failure test phải được kiểm tra để đảm bảo primary error/case ID và không có secrets. Log level mặc định không ghi HTTP body/screenshot liên tục, tránh artifact growth.
 
-## 16. Reporting và export
+## 16. Báo cáo và xuất kết quả
 
-### 16.1 Output convention
+### 16.1 Quy ước đầu ra
 
 ```text
 artifacts/runs/<run-id>/
@@ -656,7 +656,7 @@ artifacts/runs/<run-id>/
 └── postman/                  # Postman local reports, separated
 ```
 
-### 16.2 Reporting policy (medium-size)
+### 16.2 Chính sách báo cáo
 
 - **Reuse** pytest builtin JUnit XML và `pytest-html` thay vì viết `junit_exporter.py`/`html_exporter.py` riêng.
 - Framework chỉ viết `ResultCollector`, `ArtifactManager`, `ReportManager`, `manifest.json`, JSON summary và link/index gộp Postman. Không duplicate pytest reporters.
@@ -664,14 +664,14 @@ artifacts/runs/<run-id>/
 - `TestResult` tách `setup/call/teardown` phases; tính test outcome đúng một lần và giữ nguyên primary failure. Unexpected cleanup failure là teardown issue riêng.
 - `manifest.json` có `schema_version`, run context, counts, redacted metadata, relative links; worker artifacts không bị overwrite.
 
-### 16.3 Failure capture
+### 16.3 Thu thập dữ liệu khi thất bại
 
 - UI: screenshot, page source, URL, console nếu hỗ trợ; chỉ trên fail/debug và luôn giới hạn số lượng/kích thước.
 - API: method/path/status, correlation ID, truncated sanitized request/response summary (không dump raw secrets).
 - Lỗi chụp artifact chỉ log warning, không thay thế lỗi test.
 - `tests/framework/integration/test_failure_artifacts.py` tạo deliberate controlled failures và xác minh output/counter/redaction bằng temp run directory.
 
-## 17. Pytest plugin lifecycle
+## 17. Vòng đời pytest plugin
 
 ```text
 pytest_addoption       -> register execution options (env, browser, external opt-in)
@@ -689,7 +689,7 @@ pytest_sessionfinish  -> finalize summary/manifest on controller
 - Khi dùng xdist, **worker** capture artifacts; **controller** aggregate và xuất manifest cuối; tránh mỗi worker đè lên `reports/` chung.
 - Self-test plugin thông qua `pytester`: confirm marker registration, option parsing, external skip policy, teardown reporting, unique artifacts và original failure preservation.
 
-## 18. Exception hierarchy
+## 18. Hệ thống phân cấp exception
 
 ```text
 FrameworkError
@@ -714,7 +714,7 @@ Assertion failure phải phân biệt với framework/configuration/data error t
 
 - Khi wrap exception phải giữ `raise ... from exc` và root-cause context; expected non-2xx API response không tự là `ApiClientError` nếu transport vẫn thành công.
 
-## 19. Runtime test data và cleanup
+## 19. Dữ liệu test lúc chạy và cleanup
 
 DataLoader chỉ xử lý static data. Runtime resources được tạo bằng factory fixtures và theo dõi bằng `ResourceTracker`.
 
@@ -731,7 +731,7 @@ Cleanup failure được log và report như teardown issue nhưng không che ca
 - **Đăng ký cleanup ngay sau mỗi lần tạo resource thành công**, kể cả khi fixture setup còn bước sau có thể fail. Local self-tests xác minh LIFO, idempotent best-effort cleanup và thông tin teardown riêng biệt.
 - External demos v1 là read-only/negative-login, không tạo server-side resources cần cleanup; Postman cases ghi dữ liệu chỉ khi có policy riêng.
 
-## 20. Retry, flaky và quarantine
+## 20. Retry, test flaky và quarantine
 
 - Không bật full-test rerun mặc định; test fail phải tạo diagnostic hữu ích.
 - API retry chỉ cho request idempotent khi có transient failure và giới hạn; demo external tắt retry để budget chính xác.
@@ -740,7 +740,7 @@ Cleanup failure được log và report như teardown issue nhưng không che ca
 - `serial` chỉ là annotation, không tự ép xdist chạy tuần tự: serial suite dùng job riêng hoặc scheduler xác định.
 - Triage 3 loại: **framework failure**, **SUT product failure**, **external infrastructure failure**; report/issue được gán đúng nhóm.
 
-## 21. Parallel execution — extension sau MVP
+## 21. Thực thi song song — phần mở rộng sau MVP
 
 Chuẩn bị cho `pytest-xdist`:
 
@@ -750,7 +750,7 @@ Chuẩn bị cho `pytest-xdist`:
 - Mặc định **không** bật parallel cho external demos (chỉ 1 worker). Chỉ bật cho local framework suite sau isolation verification.
 - Không bật xdist trong MVP chỉ vì đã cài dependency; overhead có thể cao hơn lợi ích cho ít test.
 
-## 22. Browser, file download và window handling
+## 22. Trình duyệt, tải file và quản lý cửa sổ
 
 DriverFactory là nơi duy nhất tạo Chrome/Firefox. Test/Page Object không tự gọi `webdriver.Chrome()`.
 
@@ -761,7 +761,7 @@ WindowManager quản lý tab/window, alert và frame theo explicit API thay vì 
 
 - Download completion check phải phân biệt partial/temp download, stable size, expected checksum/content nếu có; không suy luận chỉ từ file existence. Browser fixture always `quit()` ở teardown nếu đã khởi tạo thành công.
 
-## 23. Dependencies và packaging
+## 23. Dependency và đóng gói
 
 Package cài được qua:
 
@@ -780,7 +780,7 @@ python -m pytest tests/framework -q
 - Không thêm `pandas` chỉ để đọc test data dạng bảng; không duy trì `requirements.txt` khác nguồn nếu không có lý do cụ thể.
 - Lock/dependency reproducibility cho CI được bổ sung khi chọn package manager, không invent lock format.
 
-## 24. Security & privacy
+## 24. Bảo mật và quyền riêng tư
 
 - Không commit `.env`, password, tokens, cookies, API keys; dùng CI secret store.
 - Redaction phải áp dụng cho log, exception, pytest assertion repr, Postman subprocess stdout/stderr/reports, URLs query string và request/response artifacts.
@@ -798,7 +798,7 @@ python -m pytest tests/framework -q
 - Mapping: requirement/quality attribute → test design technique → case IDs → latest execution evidence.
 - Dùng bảng/case metadata đơn giản ở MVP; không xây full test management database.
 
-## 26. CI/CD pipeline và chi phí
+## 26. Pipeline CI/CD và chi phí
 
 ```text
 PR (fast / zero external)
@@ -829,7 +829,7 @@ Nightly (future)
 - Publish available redacted artifacts even on test failure; report failure CI status appropriately.
 - External failures may require human triage; do not automatically re-trigger costly pipelines to hide failures.
 
-## 27. Quality gates
+## 27. Cổng kiểm soát chất lượng
 
 - Ruff lint + format check; mypy where types are defined; pytest collection no errors; strict markers.
 - Framework unit tests pass; local integration validates HTTP/driver/reporting behavior (when dependencies are present).
@@ -839,9 +839,9 @@ Nightly (future)
 - External smoke chỉ được chọn sau local quality gates; công khai số external cases/requests/browsers dự kiến.
 - Không đánh đồng `skipped` do thiếu Chrome hoặc external disabled với `passed`; báo trạng thái rõ ràng.
 
-## 28. Acceptance criteria — MVP
+## 28. Tiêu chí nghiệm thu — MVP
 
-### 28.1 Framework self-verification (bắt buộc)
+### 28.1 Framework tự kiểm chứng (bắt buộc)
 
 - [ ] `python -m pytest tests/framework/unit -q` pass; **không phát sinh public HTTP requests**.
 - [ ] Settings precedence và invalid-value diagnostics đúng; `SecretValue` repr/log không lộ value.
@@ -855,7 +855,7 @@ Nightly (future)
 - [ ] Logs/artifacts không chứa raw secrets; test kiểm tra redaction và file size/budget policies.
 - [ ] README có lệnh cài đặt/chạy và giải thích rõ sự khác biệt local/real external tests.
 
-### 28.2 Live demo verification (opt-in, không thuộc default PR cost)
+### 28.2 Kiểm chứng demo trực tiếp (opt-in, không thuộc chi phí PR mặc định)
 
 - [ ] `DEMO-API-001` chạy thật đúng expected (`GET /posts/1`), tối đa 1 request và không retry.
 - [ ] `DEMO-UI-001` chạy thật negative login, 1 browser, 1 login attempt, không bị mất primary failure nếu capture artifact lỗi.
@@ -864,44 +864,44 @@ Nightly (future)
 
 **Lưu ý:** Các checkbox là tiêu chí **cần kiểm chứng khi code**, không phải kết quả đã hoàn thành tại thời điểm viết DESIGN v2.
 
-## 29. Thứ tự hiện thực — vertical slices, verify sau mỗi phase
+## 29. Thứ tự hiện thực — lát cắt dọc, kiểm chứng sau mỗi giai đoạn
 
-### Phase 1 — Foundation + framework self-tests
+### Giai đoạn 1 — Nền tảng và framework self-test
 
 - Package layout, Settings, exceptions, pytest options/markers, minimal logging.
 - Viết `tests/framework/unit/test_settings.py`, `test_secret_redaction.py`, `test_pytest_plugin.py` ngay trong phase.
 - Verify: install editable, Ruff, collection, options, local-only default.
 
-### Phase 2 — First working API vertical slice
+### Giai đoạn 2 — Lát cắt API hoạt động đầu tiên
 
 - `BaseApiClient` + transport DI + response handling + native assert/schema validation.
 - Unit fake transport + local HTTP integration; basic JUnit/HTML report từ pytest.
 - Verify: timeout, unexpected 500, 204, wrong schema, non-leaking logs.
 
-### Phase 3 — First working local UI vertical slice
+### Giai đoạn 3 — Lát cắt UI cục bộ hoạt động đầu tiên
 
 - DriverFactory, BasePage, explicit waits, controlled mini-login HTML.
 - Verify: successful action, element timeout, screenshot/teardown on deliberate fail.
 - Nếu local Chrome chưa được cài, báo blocked rõ, không coi là passed.
 
-### Phase 4 — Data-driven + runtime resource lifecycle
+### Giai đoạn 4 — Hướng dữ liệu và vòng đời tài nguyên lúc chạy
 
 - Providers CSV/JSON/YAML/XLSX, typed models, pytest params, runtime secret resolver.
 - Verify malformed data/duplicate IDs, collection-vs-runtime security, cleanup LIFO và partial setup.
 
-### Phase 5 — 2 live demo tests (gated)
+### Giai đoạn 5 — Hai demo trực tiếp có kiểm soát
 
 - Application-specific `PostsClient`/`LoginPage` dưới `tests/support`.
 - Implement `DEMO-API-001` và `DEMO-UI-001`; external gate và per-run budget.
 - Verify real live execution **chỉ sau** các local checks; không retry, không matrix.
 
-### Phase 6 — Postman CLI + reporting hardening
+### Giai đoạn 6 — Postman CLI và tăng độ tin cậy của báo cáo
 
 - Local PostmanRunner, mocked process tests, optional local collection; report linking.
 - Manifest, JSON summary, structured logs, controlled failure artifact tests, xdist-ready paths.
 - Verify secret redaction, exit-code handling, exporter reuse, controller/worker responsibilities.
 
-### Phase 7 — Final verification, CI và documentation
+### Giai đoạn 7 — Kiểm chứng cuối, CI và tài liệu
 
 - PR local gates, opt-in demo job, quality checks, README/docs/ADR cho mọi thay đổi scope.
 - Verify reproducibility và cost ceiling; không gọi hoàn thành nếu chưa có evidence chạy thật ở tầng tương ứng.
@@ -917,16 +917,16 @@ Nightly (future)
 - Chẩn đoán framework defect, SUT defect và environment failure khác nhau; không retry để che lỗi.
 - Ưu tiên dễ debug, deterministic, có chi phí đo được hơn abstraction và extension giả định.
 
-## 31. Cost Control, test execution policy và failure diagnosis
+## 31. Kiểm soát chi phí, chính sách thực thi và chẩn đoán lỗi
 
-### 31.1 Default: offline-first / cheap feedback
+### 31.1 Mặc định: offline-first và phản hồi chi phí thấp
 
 - Lệnh mặc định để phát triển: `python -m pytest tests/framework -q` (unit + local integration theo điều kiện môi trường).
 - PR chạy framework self-tests; **không tự gọi JSONPlaceholder, SauceDemo, Postman Cloud, Selenium Grid hoặc paid infrastructure**.
 - Unit tests mock mọi network/process. Integration framework có thể sử dụng `127.0.0.1` và local browser; chỉ spawn Chrome ở browser-specific suite. Trong hot loop ưu tiên `tests/framework/unit`; local browser integration chạy ở commit/PR gate có chủ đích.
 - Không tự chạy full regression trên mỗi source save; chọn tests impacted trước, toàn bộ local suite khi chuẩn bị commit/PR.
 
-### 31.2 External gates (fail closed)
+### 31.2 Cổng kiểm soát bên ngoài
 
 1. Marker `external` **không chạy** khi thiếu `--run-external`, kể cả khi trực tiếp chọn test module/node ID (plugin skip rõ ràng).
 2. `--run-external` chỉ cho phép những case đã approve, ban đầu `DEMO-API-001` + `DEMO-UI-001`; không bật bằng default CI. Các demo có allowlist cho URL đích để cấu hình sai không âm thầm chuyển request sang host khác.
@@ -944,7 +944,7 @@ Nightly (future)
 
 Public demo có thể miễn phí ở thời điểm thiết kế nhưng vẫn tiêu thụ network/CI resources và có thể rate-limit. Chính sách không dựa vào giả định rằng external service luôn miễn phí hoặc luôn sẵn sàng.
 
-### 31.4 Failure diagnosis matrix
+### 31.4 Ma trận chẩn đoán lỗi
 
 | Failure source | Typical evidence | Action |
 |---|---|---|
@@ -954,7 +954,7 @@ Public demo có thể miễn phí ở thời điểm thiết kế nhưng vẫn t
 | Test design/oracle | Expected sai, unstable locator, coupling between cases | Update specification/test; không hạ assertion vô điều kiện |
 | Reporting/cleanup | Original test failure + artifact/teardown failure | Preserve primary failure; fix supporting infrastructure |
 
-### 31.5 Khuyến nghị run commands sau khi implementation
+### 31.5 Lệnh chạy khuyến nghị sau khi hiện thực
 
 ```bash
 # Cheap/default self-tests, no public traffic
@@ -974,7 +974,7 @@ python -m pytest --collect-only -q
 
 Lệnh trên là **mục tiêu CLI sau khi implement**; chưa thể chạy thật nếu chưa có source tests/plugin/fixtures.
 
-## 32. Naming conventions và tài liệu đối chiếu
+## 32. Quy ước đặt tên và tài liệu đối chiếu
 
 Tên thư mục và module được chọn dựa vào conventions, không được gọi là một tiêu chuẩn thiết kế duy nhất:
 
@@ -991,9 +991,11 @@ Trong v2, `tests/framework`, `tests/support`, `test-strategy.md` và `cost-polic
 
 ---
 
-**Approval scope:** Áp dụng các quyết định này cho implementation v2. Bản tài liệu là **design specification**, không thay thế source code/test results. Sau khi implement, cập nhật acceptance checkboxes bằng kết quả chạy thực tế.
+**Phạm vi phê duyệt:** Áp dụng các quyết định này cho phiên bản v2. Bản tài liệu là
+**đặc tả thiết kế**, không thay thế source code hoặc kết quả test. Sau khi hiện thực,
+cập nhật các checkbox nghiệm thu bằng kết quả chạy thực tế.
 
-## Implementation evidence — 14/10/2026
+## Bằng chứng hiện thực — 14/10/2026
 
 - Runtime được cô lập tại `.venv` (Python 3.11); package vẫn được lint/type-check theo target Python 3.10.
 - `tests/framework/unit`: **30 passed**; không gọi public service.
@@ -1003,10 +1005,20 @@ Trong v2, `tests/framework`, `tests/support`, `test-strategy.md` và `cost-polic
 - Collection: **39 tests collected**; Ruff format/lint pass; mypy pass trên **58 source files**.
 - HTML, JUnit, JSON summary và `manifest.json` đã được tạo và đọc lại. Postman CLI thật không bắt buộc trong run này; command/exit/redaction contract đã được kiểm tra bằng mocked subprocess.
 
-### Completion update
+### Cập nhật hoàn thành
 
 - Bổ sung 5 deterministic local demo cases: local API success/404, CSV-driven UI positive/negative và API-to-UI flow.
 - Default full run: **43 passed, 3 skipped** trên **46 collected tests**. Ba skip được phân loại rõ: hai external cases chưa opt-in và một optional Postman CLI integration do máy không có executable.
 - Hai approved live demos được chạy lại: **2 passed**; external budget và allowlist vẫn được giữ nguyên.
 - Controlled-failure demo chính thức tạo log text/JSONL, screenshot PNG 1440×857, page source, summary và manifest; primary assertion vẫn là lỗi hiển thị.
-- Thêm workflow `.github/workflows/qa-pytest-framework.yml` với quality job, controlled Chrome job và manual-only external job. Workflow YAML đã parse thành công tại local; việc thực thi trên GitHub runner cần push repository.
+- Thêm workflow `.github/workflows/quality.yml` với quality job, Chrome cục bộ có
+  kiểm soát và external job chỉ chạy thủ công.
+
+### Kiểm chứng mới nhất — 15/10/2026
+
+- Toàn bộ lần chạy mặc định: **52 passed, 3 skipped** trên **55 test đã thu thập**.
+- Ba test skip đúng chính sách: hai demo bên ngoài chưa opt-in và một integration test
+  tùy chọn do chưa cài Postman CLI.
+- Ruff pass toàn repository; mypy pass trên **63 source files** thuộc `src/`.
+- Các demo localhost API, Selenium Chrome headless, data-driven, property-based,
+  reporting và analytics đều nằm trong lần chạy đã pass.

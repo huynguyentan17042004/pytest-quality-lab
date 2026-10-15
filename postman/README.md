@@ -1,5 +1,12 @@
-# Postman collections
+# Postman collection
 
-Collections remain executable Postman suites and are not converted into DataLoader records. The local collection is only for an opt-in localhost runner check. The runner uses an argument list, `shell=False`, local reports, a timeout, and `--no-report-events`.
+Collection vẫn là test suite Postman có thể thực thi và không được chuyển thành record
+của `DataLoader`. Collection cục bộ chỉ phục vụ integration test opt-in trên localhost.
 
-Runtime variables are merged into a temporary local Postman environment file and passed with `-e`. The temporary file is removed after the subprocess exits, including timeout/failure paths. The runner does not use `postman login`, collection IDs, or `--env-var` for local runs.
+Runner truyền đối số dưới dạng danh sách, dùng `shell=False`, report cục bộ, timeout
+và `--no-report-events`. Biến runtime được hợp nhất vào một file Postman environment
+tạm rồi truyền qua `-e`. File tạm luôn bị xóa sau khi subprocess kết thúc, kể cả khi
+timeout hoặc thất bại.
+
+Runner cục bộ không dùng `postman login`, collection ID hoặc `--env-var`; vì vậy
+không cần đưa credential vào command line.

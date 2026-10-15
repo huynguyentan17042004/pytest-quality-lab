@@ -1,28 +1,43 @@
-# Quality analytics
+# Phân tích chất lượng
 
-Plugin ghi kết quả cuối cùng của từng test vào `artifacts/analytics/quality.db` sau
-mỗi pytest session và tạo lại `artifacts/analytics/dashboard.html`. Ghi SQLite dùng
-transaction, WAL mode, busy timeout và unique key `(run_id, nodeid)`.
+Sau mỗi pytest session, plugin ghi kết quả cuối cùng của từng test vào
+`artifacts/analytics/quality.db`, rồi tạo lại
+`artifacts/analytics/dashboard.html`. SQLite dùng transaction, WAL mode, busy timeout
+và khóa duy nhất `(run_id, nodeid)`.
 
-Dashboard hiển thị:
+## Chỉ số trên dashboard
 
-- Pass rate của run mới nhất, tính trên `passed + failed` và không coi intentional skip
-  là failure.
-- Flaky rate: tỷ lệ test từng có cả kết quả `passed` và `failed` trong lịch sử đang lưu.
-- Execution time: tổng duration cuối cùng của các test trong run mới nhất.
-- Requirement coverage: số requirement ID khác nhau đã được chạy trên tổng catalog
+- **Tỷ lệ thành công:** tính trên `passed + failed` của lần chạy mới nhất; intentional
+  skip không bị xem là failure.
+- **Tỷ lệ flaky:** tỷ lệ test từng có cả trạng thái `passed` và `failed` trong lịch
+  sử đang lưu.
+- **Thời gian thực thi:** tổng duration cuối cùng của các test trong lần chạy mới nhất.
+- **Độ bao phủ requirement:** số requirement ID khác nhau đã chạy trên tổng catalog
   `configs/requirements.yaml`.
-- Run history, flaky candidates và failure history theo fingerprint.
+- **Lịch sử:** bảng các lần chạy, flaky candidate và failure theo fingerprint.
 
-Failure fingerprint là SHA-256 rút gọn của loại lỗi và thông báo đã chuẩn hóa. Full
-traceback đã redaction được lưu tối đa 12.000 ký tự; thông báo lỗi tối đa 4.000 ký tự.
-Các giá trị từ biến môi trường có tên nhạy cảm (password/token/secret/key/cookie) được
-đăng ký với bộ lọc ngay đầu session. Không ghi secret thô vào DB.
+## Lưu lỗi an toàn
 
-Tắt analytics cho một run bằng `--no-analytics`, hoặc đổi DB bằng
-`--analytics-db=/path/to/quality.db`. Tái tạo dashboard độc lập:
+Failure fingerprint là SHA-256 rút gọn từ loại lỗi và thông báo đã chuẩn hóa. Traceback
+đã redaction được lưu tối đa 12.000 ký tự; thông báo lỗi tối đa 4.000 ký tự. Các biến
+môi trường có tên nhạy cảm như password, token, secret, key hoặc cookie được đăng ký
+với bộ lọc ngay đầu session. Database không lưu secret thô.
 
-`--collect-only` không tạo run analytics vì chưa có test nào được thực thi.
+## Điều khiển từ terminal
+
+Tắt analytics cho một lần chạy:
+
+```bash
+python -m pytest -q --no-analytics
+```
+
+Đổi vị trí database:
+
+```bash
+python -m pytest -q --analytics-db=/path/to/quality.db
+```
+
+Tạo lại dashboard từ lịch sử hiện có:
 
 ```bash
 qa-dashboard --db artifacts/analytics/quality.db \
@@ -30,5 +45,6 @@ qa-dashboard --db artifacts/analytics/quality.db \
   --requirements configs/requirements.yaml
 ```
 
-Run controlled-failure ở `demos/controlled_failure/` để kiểm tra traceback, browser
-artifacts và failure history. Exit code `1` là kết quả mong đợi của demo này.
+`--collect-only` không tạo bản ghi analytics vì chưa có test nào thực thi. Chạy
+`demos/controlled_failure/` để kiểm tra traceback, browser artifact và failure
+history; exit code `1` là kết quả mong đợi của demo này.

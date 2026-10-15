@@ -1,10 +1,27 @@
-# Reporting
+# Báo cáo và artifact
 
-Every run creates `artifacts/runs/<run-id>/manifest.json`, `reports/summary.json`, logs, and bounded artifact directories. Use pytest's JUnit XML and pytest-html exporters for those standard formats. Supporting artifact failures never replace the original test failure.
+Mỗi lần chạy tạo một thư mục `artifacts/runs/<run-id>/` độc lập, gồm
+`manifest.json`, `reports/summary.json`, log và các thư mục artifact có giới hạn.
+Muốn xuất định dạng chuẩn, dùng trực tiếp exporter JUnit XML và pytest-html:
 
-The pytest hook records redacted exception type, message, and Python traceback while
-preserving the primary failure if screenshot or page-source capture also fails.
+```bash
+python -m pytest -q \
+  --junitxml=artifacts/junit.xml \
+  --html=artifacts/report.html \
+  --self-contained-html
+```
 
-Multi-run analytics are stored in `artifacts/analytics/quality.db`; see
-`quality-analytics.md`. Optional Allure 3 raw results and history setup are documented in
-`allure.md`.
+## Bảo toàn lỗi gốc
+
+Pytest hook ghi loại exception, thông báo và Python traceback đã redaction. Screenshot,
+page source hoặc report là artifact hỗ trợ; nếu quá trình tạo chúng thất bại, framework
+vẫn giữ exception ban đầu làm nguyên nhân chính.
+
+## Lịch sử nhiều lần chạy
+
+Kết quả dài hạn nằm trong `artifacts/analytics/quality.db`; xem
+[phân tích chất lượng](quality-analytics.md). Allure raw results và history là lớp tùy
+chọn, được mô tả tại [tích hợp Allure](allure.md).
+
+Các thư mục `artifacts/` không được commit. Khi chia sẻ report, cần kiểm tra lại dữ
+liệu nhạy cảm dù framework đã áp dụng redaction tự động.

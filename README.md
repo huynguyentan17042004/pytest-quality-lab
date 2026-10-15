@@ -32,6 +32,18 @@ flowchart LR
     P --> R[JUnit / HTML / Allure results]
 ```
 
+## Demo screenshots
+
+The SQLite-backed dashboard keeps quality signals from multiple pytest runs in one
+place, including the intentional controlled-failure run:
+
+![Quality Analytics Dashboard showing pass rate, flaky rate, execution time, requirement coverage, and run trends](docs/assets/quality-dashboard.png)
+
+When a Selenium test fails, the framework captures the browser state without replacing
+the original assertion. This is the local deterministic login fixture used by the demo:
+
+![Controlled Selenium login demo captured automatically on failure](docs/assets/controlled-ui-failure.png)
+
 ## Requirements
 
 - Python 3.10 or newer.

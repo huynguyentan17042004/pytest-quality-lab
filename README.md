@@ -186,6 +186,19 @@ Không truyền password hoặc token qua đối số dòng lệnh và không co
 hình. Sao chép `.env.example` thành `.env` để lưu giá trị chỉ dùng cục bộ; `.env` đã
 được Git bỏ qua.
 
+## WireMock service virtualization
+
+Bộ WireMock kiểm tra các luồng đọc/tạo post, validation, request matching, stateful
+retry, timeout, malformed JSON và connection fault qua HTTP thật. Pytest tự quản lý
+Docker Compose, readiness, scenario isolation, request journal, log và cleanup:
+
+```bash
+python -m pytest tests/api/test_wiremock_posts_api.py --env=wiremock -v
+```
+
+Suite mặc định không khởi động Docker. Xem [hướng dẫn WireMock](docs/wiremock-api-lab.md)
+để chạy đầy đủ báo cáo và hiểu ranh giới giữa mock tests với real integration tests.
+
 ## Cấu trúc dự án
 
 ```text

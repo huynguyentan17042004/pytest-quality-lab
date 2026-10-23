@@ -1,0 +1,9 @@
+api_base_url = "http://127.0.0.1:8089"
+ui_base_url = "file:///"
+browser = "chrome"
+timeout = 5.0
+headless = true
+retry_count = 0
+
+[report]
+max_artifact_bytes = 1048576

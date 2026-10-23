@@ -1,0 +1,9 @@
+services:
+  wiremock:
+    image: wiremock/wiremock:3.13.2
+    ports:
+      - "127.0.0.1:8089:8080"
+    volumes:
+      - ./wiremock:/home/wiremock:ro
+    command: ["--disable-banner"]
+

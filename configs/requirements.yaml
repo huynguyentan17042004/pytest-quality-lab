@@ -3,6 +3,20 @@ requirements:
     title: Read a post by identifier
   - id: REQ-API-POST-NOT-FOUND
     title: Report an unknown post
+  - id: REQ-API-POST-UNAVAILABLE
+    title: Surface an unavailable post service without hidden retries
+  - id: REQ-API-POST-FILTER
+    title: Send post filters and correlation metadata correctly
+  - id: REQ-API-POST-CREATE
+    title: Create only posts that satisfy request validation
+  - id: REQ-API-POST-RETRY
+    title: Recover from one transient read failure within the request budget
+  - id: REQ-API-POST-TIMEOUT
+    title: Convert a slow post service into a typed timeout
+  - id: REQ-API-POST-MALFORMED
+    title: Expose malformed JSON instead of accepting corrupt data
+  - id: REQ-API-POST-TRANSPORT
+    title: Convert a broken HTTP connection into a typed transport error
   - id: REQ-UI-LOGIN-SUCCESS
     title: Allow a valid local login
   - id: REQ-UI-LOGIN-REJECT

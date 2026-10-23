@@ -16,6 +16,40 @@ permissions:
   contents: read
 
 jobs:
+  wiremock-api-lab:
+    name: Managed WireMock business scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project
+        run: python -m pip install -e '.[dev,allure]'
+      - name: Run managed WireMock scenarios
+        run: >-
+          python -m pytest tests/api/test_wiremock_posts_api.py
+          --env=wiremock -v
+          --html=artifacts/wiremock-report.html
+          --self-contained-html
+          --junitxml=artifacts/wiremock-junit.xml
+          --alluredir=artifacts/allure-results
+      - name: Show WireMock diagnostics on failure
+        if: failure()
+        run: |
+          test -f artifacts/wiremock/container.log && cat artifacts/wiremock/container.log || true
+      - name: Upload WireMock artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pytest-quality-lab-wiremock-results
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
   quality-and-local:
     name: Static checks and deterministic tests
     runs-on: ubuntu-latest

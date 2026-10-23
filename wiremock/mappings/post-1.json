@@ -1,0 +1,19 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPath": "/posts/1"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "userId": 7,
+      "id": 1,
+      "title": "Controlled local post",
+      "body": "Deterministic contract fixture"
+    }
+  }
+}
